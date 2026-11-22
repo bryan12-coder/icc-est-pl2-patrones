@@ -42,3 +42,10 @@ application {
     // Define the main class for the application.
     mainClass = "edu.ups.pap.App"
 }
+tasks.jar {
+    archiveFileName.set("SnakeLab.jar")
+
+    manifest {
+        attributes["Main-Class"] = "edu.ups.pap.App"
+    }
+}
