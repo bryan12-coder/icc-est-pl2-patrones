@@ -16,16 +16,20 @@ public class ControladorJuego {
 
     public void iniciarJuego(){
         partida.iniciar();
+        timer.start();
     }
 
     public void pausarJuego(){
         partida.pausar();
+        timer.stop();
     }
     public void reanudarJuego(){
         partida.reanudar();
+        timer.start();
     }
     public void reiniciarJuego(){
         partida.reiniciar();
+        timer.start();
     }
     public void moverSerpiente(Direccion direccion){
         partida.manejarEntrada(direccion);
@@ -33,6 +37,9 @@ public class ControladorJuego {
     }
     public void actualizarJuego(){
         partida.actualizar();
+        if(partida.estaTerminada()){
+            timer.stop();
+        }
     }
 
     
