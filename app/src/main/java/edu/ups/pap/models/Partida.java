@@ -1,5 +1,9 @@
 package edu.ups.pap.models;
 
+import edu.ups.pap.models.abstractFactory.ComidaDoble;
+import edu.ups.pap.models.abstractFactory.ComidaVelocidad;
+import edu.ups.pap.models.abstractFactory.FabricaComida;
+import edu.ups.pap.models.abstractFactory.FabricaComidaClasica;
 import edu.ups.pap.models.state.EstadoJugando;
 import edu.ups.pap.models.state.EstadoPartida;
 import edu.ups.pap.models.state.EstadoPausado;
@@ -13,6 +17,8 @@ public class Partida {
     private Comida comida;
     private int puntaje;
     private boolean gano;
+    private FabricaComida fabrica;
+    private int velocidad = 200;
 
     
 
@@ -21,7 +27,8 @@ public class Partida {
         this.estado= new EstadoPreparado();
         this.serpiente=new Serpiente();
         this.tablero= new Tablero(20, 15);
-        this.comida=new Comida(new Posicion(10, 5));
+        this.fabrica = new FabricaComidaClasica();
+        this.comida = fabrica.crearComidaNormal(new Posicion(10, 5));
         this.puntaje=0;
         this.gano=false;
     }
@@ -53,9 +60,10 @@ public class Partida {
     
     public void reiniciarDatos(){
          serpiente=new Serpiente();
-         comida=new Comida(new Posicion(10, 5));
+         comida = fabrica.crearComidaNormal(new Posicion(10, 5));
          puntaje=0;
          gano = false;
+         velocidad=200;
 
     }
     public void actualizarJuego() {//Pa que pueda avanzar, osea moverse
@@ -81,7 +89,15 @@ public class Partida {
         }
 
         if(crecer){
-             puntaje += 10;
+             if (comida instanceof ComidaDoble) {
+               puntaje += 20;
+            } else {
+               puntaje += 10;
+            }
+            if (comida instanceof ComidaVelocidad) {
+                    velocidad = 150;
+             }
+            
             if (serpiente.getLongitud() == 300) {
                 gano = true;
                cambiarEstado(new EstadoTerminado());
@@ -96,7 +112,16 @@ public class Partida {
                 nuevaPosicion = new Posicion(x, y);
                 
             } while (serpiente.mismaPosicion(nuevaPosicion));
-            comida.setPosicion(nuevaPosicion);
+
+            double probabilidad = Math.random();
+
+             if (probabilidad < 0.8) {
+             comida = fabrica.crearComidaNormal(nuevaPosicion);
+            } else {
+               comida = fabrica.crearComidaEspecial(nuevaPosicion);
+            }
+           
+           
             
         }
         
@@ -131,6 +156,9 @@ public class Partida {
     }
     public Comida getComida() {
     return comida;
+    }
+    public int getVelocidad() {
+    return velocidad;
     }
     
     
