@@ -26,8 +26,8 @@ public class Serpiente {
 
     public void mover(boolean crecer) {
       Posicion nuevaCabeza = getCabeza().mover(direccionActual);
-     segmentos.add(0, nuevaCabeza);
-       segmentos.remove(segmentos.size() - 1);
+       segmentos.add(0, nuevaCabeza);
+
        if(!crecer){
         segmentos.remove(segmentos.size() - 1);
        }

@@ -3,12 +3,19 @@
  */
 package edu.ups.pap;
 
+import javax.swing.SwingUtilities;
+
+import edu.ups.pap.vista.VistaJuego;
+
 public class App {
     public String getGreeting() {
-        return "Hello World!";
+        return "Prcatica 2";
     }
 
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        SwingUtilities.invokeLater(() -> {
+            VistaJuego ventana = new VistaJuego();
+            ventana.setVisible(true);
+        });
     }
 }

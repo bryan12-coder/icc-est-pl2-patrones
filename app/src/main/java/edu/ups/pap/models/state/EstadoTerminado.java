@@ -26,7 +26,7 @@ public class EstadoTerminado implements EstadoPartida{
     @Override
     public void reiniciar(Partida partida) {
        partida.reiniciarDatos();
-        partida.cambiarEstado(new EstadoPreparado());
+        partida.cambiarEstado(new EstadoJugando());
     }
 
     @Override

@@ -19,116 +19,132 @@ public class Partida {
     private boolean gano;
     private FabricaComida fabrica;
     private int velocidad = 200;
-
-    
-
+    private int velocidadInicial = 200;
+    private int manzanas = 0;
 
     public Partida() {
-        this.estado= new EstadoPreparado();
-        this.serpiente=new Serpiente();
-        this.tablero= new Tablero(20, 15);
+        this.estado = new EstadoPreparado();
+        this.serpiente = new Serpiente();
+        this.tablero = new Tablero(20, 15);
         this.fabrica = new FabricaComidaClasica();
         this.comida = fabrica.crearComidaNormal(new Posicion(10, 5));
-        this.puntaje=0;
-        this.gano=false;
+        this.puntaje = 0;
+        this.gano = false;
+    }
+
+    public Partida(FabricaComida fabrica, int velocidadInicial) {
+        this();
+
+        this.fabrica = fabrica;
+        this.velocidadInicial = velocidadInicial;
+        this.velocidad = velocidadInicial;
+        this.comida = fabrica.crearComidaNormal(new Posicion(10, 5));
     }
 
     public Serpiente getSerpiente() {
-    return serpiente;
+        return serpiente;
     }
 
-    public void cambiarEstado(EstadoPartida nuevoEstado){
-        this.estado=nuevoEstado;
+    public void cambiarEstado(EstadoPartida nuevoEstado) {
+        this.estado = nuevoEstado;
     }
-    public void iniciar(){
+
+    public void iniciar() {
         estado.iniciar(this);
     }
 
-    public void pausar(){
+    public void pausar() {
         estado.pausar(this);
     }
-    public void reanudar(){
+
+    public void reanudar() {
         estado.reanudar(this);
     }
-    public void reiniciar(){
+
+    public void reiniciar() {
         estado.reiniciar(this);
     }
-    public void actualizar(){
+
+    public void actualizar() {
         estado.actualizar(this);
 
     }
-    
-    public void reiniciarDatos(){
-         serpiente=new Serpiente();
-         comida = fabrica.crearComidaNormal(new Posicion(10, 5));
-         puntaje=0;
-         gano = false;
-         velocidad=200;
+
+    public void reiniciarDatos() {
+        serpiente = new Serpiente();
+        comida = fabrica.crearComidaNormal(new Posicion(10, 5));
+        puntaje = 0;
+        gano = false;
+        velocidad = velocidadInicial;
+        manzanas = 0;
 
     }
-    public void actualizarJuego() {//Pa que pueda avanzar, osea moverse
-        Posicion lugar= serpiente.getCabeza().mover(serpiente.getDireccionActual());
-        if(!tablero.dentro(lugar)){
+
+    public void actualizarJuego() {// Pa que pueda avanzar, osea moverse
+        Posicion lugar = serpiente.getCabeza().mover(serpiente.getDireccionActual());
+        if (!tablero.dentro(lugar)) {
             cambiarEstado(new EstadoTerminado());
             return;
         }
-    
+
         boolean crecer;
 
-        if(lugar.getX()== comida.getPosicion().getX() && lugar.getY()==comida.getPosicion().getY()){
-            crecer= true;
-        }else{
-            crecer=false;
+        if (lugar.getX() == comida.getPosicion().getX() && lugar.getY() == comida.getPosicion().getY()) {
+            crecer = true;
+        } else {
+            crecer = false;
         }
-         serpiente.mover(crecer);
 
-        if (serpiente.chocaConCuerpo(lugar,crecer)) {
-            
+        
+
+        if (serpiente.chocaConCuerpo(lugar, crecer)) {
+
             cambiarEstado(new EstadoTerminado());
             return;
         }
 
-        if(crecer){
-             if (comida instanceof ComidaDoble) {
-               puntaje += 20;
+        serpiente.mover(crecer);
+
+        if (crecer) {
+            manzanas++;
+            if (comida instanceof ComidaDoble) {
+                puntaje += 20;
             } else {
-               puntaje += 10;
+                puntaje += 10;
             }
             if (comida instanceof ComidaVelocidad) {
-                    velocidad = 150;
-             }
-            
+                velocidad = Math.max(60, velocidad - 30);
+            }
+
             if (serpiente.getLongitud() == 300) {
                 gano = true;
-               cambiarEstado(new EstadoTerminado());
-              return;
+                cambiarEstado(new EstadoTerminado());
+                return;
             }
             Posicion nuevaPosicion;
-           
+
             do {
                 int x = (int) (Math.random() * 20);
                 int y = (int) (Math.random() * 15);
 
                 nuevaPosicion = new Posicion(x, y);
-                
+
             } while (serpiente.mismaPosicion(nuevaPosicion));
 
             double probabilidad = Math.random();
 
-             if (probabilidad < 0.8) {
-             comida = fabrica.crearComidaNormal(nuevaPosicion);
+            if (probabilidad < 0.8) {
+                comida = fabrica.crearComidaNormal(nuevaPosicion);
             } else {
-               comida = fabrica.crearComidaEspecial(nuevaPosicion);
+                comida = fabrica.crearComidaEspecial(nuevaPosicion);
             }
-           
-           
-            
+
         }
-        
 
     }
-    public void manejarEntrada(Direccion direccion){
-        estado.manejarEntrada(this,direccion);
+
+    public void manejarEntrada(Direccion direccion) {
+        estado.manejarEntrada(this, direccion);
 
     }
 
@@ -137,30 +153,38 @@ public class Partida {
     }
 
     public boolean getGano() {
-    return gano;
+        return gano;
     }
+
     public EstadoPartida getEstado() {
-    return estado;
+        return estado;
     }
+
     public boolean estaJugando() {
-    return estado instanceof EstadoJugando;
+        return estado instanceof EstadoJugando;
     }
+
     public boolean estaPausada() {
-    return estado instanceof EstadoPausado;
+        return estado instanceof EstadoPausado;
     }
+
     public boolean estaTerminada() {
-    return estado instanceof EstadoTerminado;
+        return estado instanceof EstadoTerminado;
     }
+
     public boolean estaPreparada() {
-    return estado instanceof EstadoPreparado;
+        return estado instanceof EstadoPreparado;
     }
+
     public Comida getComida() {
-    return comida;
+        return comida;
     }
+
     public int getVelocidad() {
-    return velocidad;
+        return velocidad;
     }
-    
-    
-    
+    public int getManzanas() {
+    return manzanas;
+}
+
 }
