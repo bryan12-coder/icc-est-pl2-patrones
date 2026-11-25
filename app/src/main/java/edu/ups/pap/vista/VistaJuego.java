@@ -34,6 +34,7 @@ public class VistaJuego extends JFrame {
     private final JLabel savedLabel = label("Guardado automático del estilo", 13, MUTED, false);
     private final Preview preview = new Preview();
     private final int[] selected = { 0, 3, 1, 1 };
+    private final JLabel[] datosPartida = new JLabel[3];
 
     public VistaJuego() {
 
@@ -86,37 +87,71 @@ public class VistaJuego extends JFrame {
         return header;
     }
 
-    private JPanel createStats() {
+    private JPanel createStats() { // CREA LOS RECUADROS DE PUNTAJE , MANZANAS Y NIVEL
         JPanel stats = new JPanel(new GridLayout(1, 3, 18, 0));
         stats.setOpaque(false);
-        String[] titles = { "PUNTAJE ACTUAL", "MANZANAS", "NIVEL" };
-        String[] values = { "0", "0", "1" };
+        String[] titles = { "ULTIMO PUNTAJE", "MANZANITAS COMIDAS", "LEVEL" };
+        int puntajeAnterior = 0;
+        int manzanasAnteriores = 0;
+        int nivelAnterior = 1;
+
+        try {
+            Preferences datos = Preferences.userNodeForPackage(JuegoPanel.class);
+
+            puntajeAnterior = datos.getInt("ultimoPuntaje", 0);
+            manzanasAnteriores = datos.getInt("ultimasManzanas", 0);
+            nivelAnterior = datos.getInt("ultimoNivel", 1);
+        } catch (SecurityException ignored) {
+        }
+
+        String[] values = {
+                String.valueOf(puntajeAnterior),
+                String.valueOf(manzanasAnteriores),
+                String.valueOf(nivelAnterior)
+        };
         Color[] accents = { TEXT, GOLD, colors[1] };
         for (int i = 0; i < titles.length; i++) {
             JPanel card = panel();
             card.setLayout(new BorderLayout(0, 5));
             card.add(label(titles[i], 13, MUTED, true), BorderLayout.NORTH);
-            card.add(label(values[i], 26, accents[i], true), BorderLayout.CENTER);
+            datosPartida[i] = label(values[i], 26, accents[i], true);
+            card.add(datosPartida[i], BorderLayout.CENTER);
             stats.add(card);
         }
         return stats;
     }
 
-    private JPanel createCustomization() {
+    private void mostrarUltimaPartida() {
+        try {
+            Preferences datos = Preferences.userNodeForPackage(JuegoPanel.class);
+
+            datosPartida[0].setText(
+                    String.valueOf(datos.getInt("ultimoPuntaje", 0)));
+
+            datosPartida[1].setText(
+                    String.valueOf(datos.getInt("ultimasManzanas", 0)));
+
+            datosPartida[2].setText(
+                    String.valueOf(datos.getInt("ultimoNivel", 1)));
+        } catch (SecurityException ignored) {
+        }
+    }
+
+    private JPanel createCustomization() {// Crea las opciones para personalizar la serpiente
         JPanel left = vertical();
         left.setPreferredSize(new Dimension(430, 770));
         JPanel wardrobe = panel();
         wardrobe.setLayout(new BoxLayout(wardrobe, BoxLayout.Y_AXIS));
-        wardrobe.add(label("●  VESTIDOR ARCADE ACTIVO", 13, GREEN, true));
+        wardrobe.add(label(" ARMARIO ", 13, GREEN, true));
         wardrobe.add(Box.createVerticalStrut(14));
         wardrobe.add(label("Personaliza tu serpiente", 26, TEXT, true));
         wardrobe.add(Box.createVerticalStrut(8));
-        wardrobe.add(label("Combina colores, sombreros y gafas.", 15, MUTED, false));
-        wardrobe.add(createOptions(0, "COLOR DE PIEL", colorNames));
+        wardrobe.add(label("Crea tu outfit se original !.", 15, MUTED, false));
+        wardrobe.add(createOptions(0, "COLOR SERPIENTE", colorNames));
         wardrobe.add(createOptions(1, "SOMBREROS", hats));
-        wardrobe.add(createOptions(2, "ESTILOS DE GAFAS", glasses));
+        wardrobe.add(createOptions(2, "GAFAS", glasses));
         wardrobe.add(Box.createVerticalStrut(20));
-        JButton random = button("Combinación aleatoria / Sorpréndeme");
+        JButton random = button("Sorpréndeme");
         random.setAlignmentX(Component.LEFT_ALIGNMENT);
         random.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         random.addActionListener(e -> {
@@ -180,12 +215,12 @@ public class VistaJuego extends JFrame {
         return section;
     }
 
-    private JPanel createArena() {
+    private JPanel createArena() { // crea la vista de la serpiente y el boton para jugar
         JPanel area = new JPanel(new BorderLayout(0, 16));
         area.setOpaque(false);
         JPanel heading = panel();
         heading.setLayout(new BorderLayout());
-        heading.add(label("●  PROBADOR EN TIEMPO REAL", 14, TEXT, true), BorderLayout.WEST);
+        heading.add(label(" Armario", 14, TEXT, true), BorderLayout.WEST);
         heading.add(label("20 × 15", 13, GREEN, false), BorderLayout.EAST);
         area.add(heading, BorderLayout.NORTH);
         JPanel arena = new GridPanel();
@@ -200,11 +235,11 @@ public class VistaJuego extends JFrame {
         outfitLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         center.add(outfitLabel);
         center.add(Box.createVerticalStrut(24));
-        JLabel title = label("¡Tu estilo está listo para la acción!", 27, TEXT, true);
+        JLabel title = label("Aoutfit listo para la accion 0_o", 27, TEXT, true);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         center.add(title);
         center.add(Box.createVerticalStrut(12));
-        JLabel subtitle = label("Guarda tu combinación antes de entrar a la arena.", 15, MUTED, false);
+        JLabel subtitle = label("Guarda tu combinación antes de entrar al tablero de juego.", 15, MUTED, false);
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         center.add(subtitle);
         center.add(Box.createVerticalStrut(26));
@@ -224,23 +259,7 @@ public class VistaJuego extends JFrame {
         return area;
     }
 
-    /** Abre el juego dentro de esta misma ventana. */
-    protected void onPlay() {
-        savePreferences();
-        Container inicio = getContentPane();
-        JuegoPanel juego = new JuegoPanel(
-                colors[selected[0]], selected[1], selected[2], selected[3], () -> {
-                    setContentPane(inicio);
-                    revalidate();
-                    repaint();
-                });
-        setContentPane(juego);
-        revalidate();
-        repaint();
-        juego.iniciar();
-    }
-
-    private void refresh() {
+    private void refresh() { // muestra lo q elejimos y como esta la serpiente
         String[][] names = { colorNames, hats, glasses, speeds };
         for (int group = 0; group < optionButtons.length; group++) {
             selectedLabels[group].setText(names[group][selected[group]]);
@@ -258,7 +277,26 @@ public class VistaJuego extends JFrame {
         preview.repaint();
     }
 
-    private void savePreferences() {
+    protected void onPlay() { // Empieza la partida.
+        savePreferences();
+        Container inicio = getContentPane();
+
+        JuegoPanel juego = new JuegoPanel(
+                colors[selected[0]], selected[1], selected[2], selected[3],
+                () -> {
+                    mostrarUltimaPartida(); // Actualiza los puntos del vestidor.
+                    setContentPane(inicio);
+                    revalidate();
+                    repaint();
+                });
+
+        setContentPane(juego);
+        revalidate();
+        repaint();
+        juego.iniciar();
+    }
+
+    private void savePreferences() {// Guarda el estilo q se escojio para la serpiente
         if (prefs == null) {
             savedLabel.setText("Estilo seleccionado para esta sesión");
             return;
@@ -288,7 +326,8 @@ public class VistaJuego extends JFrame {
             /* La ventana funciona sin persistencia. */ }
     }
 
-    private static Preferences abrirPreferencias() {
+    private static Preferences abrirPreferencias() {// Abre las preferencias del usuario para SnakeLab y devuelve null
+                                                    // si no tiene permisos de acceso.
         try {
             return Preferences.userNodeForPackage(VistaJuego.class).node("SnakeLab");
         } catch (SecurityException ex) {
@@ -296,14 +335,15 @@ public class VistaJuego extends JFrame {
         }
     }
 
-    private static JPanel vertical() {
+    private static JPanel vertical() { // Crea un panel transparente para agrupar y ordenar los elementos de la
+                                       // interfaz uno debajo del otro.
         JPanel p = new JPanel();
         p.setOpaque(false);
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         return p;
     }
 
-    private static JPanel panel() {
+    private static JPanel panel() { // Crea un panel con fondo, borde y margen interior.
         JPanel p = new JPanel();
         p.setBackground(PANEL);
         p.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(LINE, 1, true),
@@ -330,7 +370,7 @@ public class VistaJuego extends JFrame {
         return b;
     }
 
-    private static class ColorIcon implements Icon {
+    private static class ColorIcon implements Icon { // crea todas las opciones de colores q se muestran en el vestidor
         private final Color color;
 
         ColorIcon(Color color) {
@@ -354,15 +394,15 @@ public class VistaJuego extends JFrame {
         }
     }
 
-    private static class GridPanel extends JPanel {
+    private static class GridPanel extends JPanel { // apariencia del tablero de ropa
         GridPanel() {
-            setBackground(BACK);
+            setBackground(new Color(55, 25, 80));
         }
 
         @Override
         protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
-            graphics.setColor(new Color(21, 30, 45));
+            graphics.setColor(new Color(85, 45, 115));
             for (int x = 0; x < getWidth(); x += 36)
                 graphics.drawLine(x, 0, x, getHeight());
             for (int y = 0; y < getHeight(); y += 36)
@@ -370,13 +410,14 @@ public class VistaJuego extends JFrame {
         }
     }
 
-    private class Preview extends JPanel {
+    private class Preview extends JPanel { // Dibuja la vista previa de la serpiente personalizada.
         Preview() {
             setOpaque(false);
         }
 
         @Override
         protected void paintComponent(Graphics graphics) {
+
             super.paintComponent(graphics);
             Graphics2D g = (Graphics2D) graphics.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -483,7 +524,7 @@ public class VistaJuego extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) { // Inicia la interfaz y muestra la ventana del juego.
         SwingUtilities.invokeLater(() -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
@@ -493,8 +534,6 @@ public class VistaJuego extends JFrame {
         });
     }
 
-    // El juego es una pantalla interna de VistaJuego, no otra ventana.
-    /** Vista y controles Swing. Las reglas y estados permanecen en Partida. */
     public static class JuegoPanel extends JPanel {
         private static final Color BACK = new Color(8, 14, 22);
         private static final Color PANEL = new Color(17, 28, 40);
@@ -534,12 +573,13 @@ public class VistaJuego extends JFrame {
         public JuegoPanel(Color color, int sombrero, int gafas, int velocidad, Runnable volver) {
             this.volver = volver;
             int[] intervalos = { 280, 200, 120 };
+
             if (velocidad < 0 || velocidad >= intervalos.length)
                 throw new IllegalArgumentException("Velocidad inválida");
             partida = new Partida(velocidad == 2 ? new FabricaComidaRapida() : new FabricaComidaClasica(),
                     intervalos[velocidad]);
             cuerpo = new DecoradorColor(new AparienciaBase(), color);
-            cabeza = new DecoradorGafas(new DecoradorOjos(cuerpo));
+            cabeza = new DecoradorSombrero(new DecoradorGafas(new DecoradorOjos(cuerpo)));
             try {
                 if (prefs != null)
                     record = prefs.getInt("record", 0);
@@ -777,6 +817,15 @@ public class VistaJuego extends JFrame {
                 try {
                     if (prefs != null)
                         prefs.putInt("record", record);
+                } catch (SecurityException ignored) {
+                }
+            }
+
+            if (partida.estaTerminada() && prefs != null) {
+                try {
+                    prefs.putInt("ultimoPuntaje", partida.getPuntaje());
+                    prefs.putInt("ultimasManzanas", partida.getManzanas());
+                    prefs.putInt("ultimoNivel", 1 + partida.getManzanas() / 5);
                 } catch (SecurityException ignored) {
                 }
             }
